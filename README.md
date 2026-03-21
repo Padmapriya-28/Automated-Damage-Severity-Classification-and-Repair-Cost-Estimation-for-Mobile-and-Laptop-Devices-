@@ -56,6 +56,7 @@ This project is a Flask-based web application for analyzing damage photos of pho
 ## Setup
 
 1. Create and activate a virtual environment.
+"e:\Damage severeity\.venv\Scripts\activate.bat"
 2. Install dependencies:
 
 ```bash
