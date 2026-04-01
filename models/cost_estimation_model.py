@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -16,15 +16,21 @@ SEVERITY_SCORES = {
     "Severe": 2.0,
 }
 
-DEVICE_FACTORS = {
-    "phone": 1.0,
-    "laptop": 1.65,
+MARKET_COST_RANGES_USD = {
+    "phone": {
+        "Minor": (40.0, 140.0),
+        "Moderate": (140.0, 300.0),
+        "Severe": (300.0, 480.0),
+    },
+    "laptop": {
+        "Minor": (90.0, 260.0),
+        "Moderate": (260.0, 620.0),
+        "Severe": (620.0, 1100.0),
+    },
 }
 
-HEURISTIC_COST = {
-    "phone": {"base": 90.0, "multiplier": 180.0},
-    "laptop": {"base": 190.0, "multiplier": 340.0},
-}
+# If a trained regressor exists, it can only influence the market estimate slightly.
+MAX_MODEL_ADJUSTMENT_RATIO = 0.15
 
 
 @dataclass
@@ -32,25 +38,55 @@ class CostEstimator:
     model: tf.keras.Model
     weights_loaded: bool
 
-    def estimate(self, severity_label: str, device_type: str) -> Tuple[float, str]:
+    def estimate(
+        self,
+        severity_label: str,
+        device_type: str,
+        severity_confidence: float,
+        severity_probabilities: Dict[str, float],
+    ) -> Tuple[float, str]:
         if severity_label not in SEVERITY_SCORES:
             raise ValueError(f"Unknown severity: {severity_label}")
 
-        if device_type not in DEVICE_FACTORS:
+        if device_type not in MARKET_COST_RANGES_USD:
             raise ValueError(f"Unknown device type: {device_type}")
 
-        score = np.array([[SEVERITY_SCORES[severity_label]]], dtype=np.float32)
-        device_factor = DEVICE_FACTORS[device_type]
+        ranges = MARKET_COST_RANGES_USD[device_type]
+
+        # Weighted expected value from classifier probabilities produces smoother, more realistic estimates.
+        weighted_expected = 0.0
+        probability_mass = 0.0
+        for label, (low, high) in ranges.items():
+            prob = float(severity_probabilities.get(label, 0.0))
+            midpoint = (low + high) / 2.0
+            weighted_expected += prob * midpoint
+            probability_mass += prob
+
+        if probability_mass <= 0:
+            selected_low, selected_high = ranges[severity_label]
+            weighted_expected = (selected_low + selected_high) / 2.0
+
+        selected_low, selected_high = ranges[severity_label]
+
+        # Move within selected severity range based on confidence while keeping estimate bounded.
+        confidence = float(np.clip(severity_confidence, 0.0, 1.0))
+        within_band = selected_low + (0.35 + 0.65 * confidence) * (selected_high - selected_low)
+
+        blended = 0.6 * weighted_expected + 0.4 * within_band
+        estimate = float(np.clip(blended, selected_low, selected_high))
+
+        note = f"Market-range estimate for {device_type} using severity probabilities"
 
         if self.weights_loaded:
-            prediction = float(self.model.predict(score, verbose=0)[0][0])
-            adjusted = max(prediction, 0.0) * device_factor
-            return round(adjusted, 2), f"Model-based estimate ({device_type})"
+            score = np.array([[SEVERITY_SCORES[severity_label]]], dtype=np.float32)
+            model_raw = float(self.model.predict(score, verbose=0)[0][0])
+            normalized = float(np.clip(model_raw / 2.0, 0.0, 1.0))
+            model_estimate = selected_low + normalized * (selected_high - selected_low)
+            delta = model_estimate - estimate
+            estimate = estimate + float(np.clip(delta, -MAX_MODEL_ADJUSTMENT_RATIO * estimate, MAX_MODEL_ADJUSTMENT_RATIO * estimate))
+            note = f"Market-range estimate for {device_type} with bounded regressor adjustment"
 
-        base = HEURISTIC_COST[device_type]["base"]
-        multiplier = HEURISTIC_COST[device_type]["multiplier"]
-        estimate = base + multiplier * SEVERITY_SCORES[severity_label]
-        return round(estimate, 2), f"Heuristic estimate for {device_type} (replace with trained regressor)"
+        return round(estimate, 2), note
 
 
 def build_cost_model() -> tf.keras.Model:

@@ -12,6 +12,8 @@ ALLOWED_LABELS = {
         "cellular_telephone",
         "pay-phone",
         "dial_telephone",
+        "ipod",
+        "hand-held_computer",
     },
     "laptop": {
         "laptop",
@@ -21,6 +23,20 @@ ALLOWED_LABELS = {
         "screen",
     },
 }
+
+# MobileNet top-5 confidence can be low on damaged-device photos, so keep threshold permissive.
+MIN_ACCEPT_SCORE = 0.03
+# Reject only when the model is confidently identifying a non-device object.
+STRONG_NON_DEVICE_SCORE = 0.35
+
+
+def _has_device_hint(label: str, expected_device: str) -> bool:
+    normalized = label.lower().replace("_", "-")
+    if expected_device == "phone":
+        return any(token in normalized for token in ["phone", "telephone", "cell", "hand-held", "ipod"])
+    if expected_device == "laptop":
+        return any(token in normalized for token in ["laptop", "notebook", "computer", "screen", "monitor"])
+    return False
 
 
 def _prepare(image: Image.Image) -> np.ndarray:
@@ -46,10 +62,20 @@ def validate_device_image(image: Image.Image, expected_device: str) -> Tuple[boo
     top = decode_predictions(preds, top=5)[0]
     simplified = [(label, float(score)) for _, label, score in top]
 
-    allowed = ALLOWED_LABELS[expected_device]
+    allowed = {label.lower() for label in ALLOWED_LABELS[expected_device]}
     for label, score in simplified:
-        if label in allowed and score >= 0.2:
+        normalized_label = label.lower()
+        if normalized_label in allowed and score >= MIN_ACCEPT_SCORE:
             return True, "ok", simplified
+
+    # If model is uncertain, do not hard-fail valid photos (common on damaged close-up images).
+    for label, score in simplified:
+        if _has_device_hint(label, expected_device) and score >= 0.01:
+            return True, "ok", simplified
+
+    top_label, top_score = simplified[0]
+    if top_score < STRONG_NON_DEVICE_SCORE:
+        return True, "ok", simplified
 
     readable_top = ", ".join([f"{label} ({score:.2f})" for label, score in simplified[:3]])
     reason = (

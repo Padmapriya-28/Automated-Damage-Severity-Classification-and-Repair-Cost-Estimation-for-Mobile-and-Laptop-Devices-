@@ -98,7 +98,12 @@ def build_prediction_payload(req):
         logger.exception("Grad-CAM generation failed. Falling back to original image.")
         heatmap = display_image
 
-    cost_amount_usd, cost_note = estimator.estimate(severity_label, normalized_device)
+    cost_amount_usd, cost_note = estimator.estimate(
+        severity_label,
+        normalized_device,
+        confidence,
+        probs,
+    )
     resolved_currency = "INR"
     cost_amount_local = convert_from_usd(cost_amount_usd, resolved_currency)
 
