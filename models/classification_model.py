@@ -12,6 +12,9 @@ from tensorflow.keras.applications import efficientnet, mobilenet_v2, resnet50
 logger = logging.getLogger(__name__)
 
 LABELS = ["Minor", "Moderate", "Severe"]
+SEVERE_MIN_CONFIDENCE = 0.5
+SEVERE_MINOR_MARGIN = 0.15
+MINOR_MIN_CONFIDENCE = 0.6
 LAST_CONV_LAYER = {
     "resnet50": "conv5_block3_out",
     "mobilenetv2": "Conv_1",
@@ -29,10 +32,22 @@ class DamageClassifier:
     def predict(self, image_array: np.ndarray) -> Tuple[str, float, Dict[str, float]]:
         logits = self.model.predict(image_array, verbose=0)[0]
         probs = tf.nn.softmax(logits).numpy().tolist()
-        best_idx = int(np.argmax(probs))
-        label = LABELS[best_idx]
-        confidence = float(probs[best_idx])
         prob_map = {LABELS[i]: float(prob) for i, prob in enumerate(probs)}
+
+        severe_prob = prob_map["Severe"]
+        minor_prob = prob_map["Minor"]
+
+        # With current dataset, Moderate is treated as an ambiguity band between Minor and Severe.
+        if severe_prob >= SEVERE_MIN_CONFIDENCE or (severe_prob - minor_prob) >= SEVERE_MINOR_MARGIN:
+            label = "Severe"
+            confidence = severe_prob
+        elif minor_prob >= MINOR_MIN_CONFIDENCE:
+            label = "Minor"
+            confidence = minor_prob
+        else:
+            label = "Moderate"
+            confidence = max(prob_map["Moderate"], 1.0 - abs(severe_prob - minor_prob))
+
         return label, confidence, prob_map
 
 
@@ -48,7 +63,8 @@ def build_model(model_name: str) -> tf.keras.Model:
 
     base.trainable = False
     inputs = layers.Input(shape=(224, 224, 3))
-    features = base(inputs, training=False)
+    # Keep training mode dynamic so transfer-learning scripts can unfreeze and fine-tune.
+    features = base(inputs)
     outputs = layers.Dense(
         len(LABELS),
         activation=None,

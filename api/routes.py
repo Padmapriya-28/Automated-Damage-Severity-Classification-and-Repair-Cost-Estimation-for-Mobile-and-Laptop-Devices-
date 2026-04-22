@@ -1,7 +1,9 @@
 import base64
 import io
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from flask import Blueprint, jsonify, request, send_file
 from PIL import Image
@@ -32,6 +34,31 @@ def predict_damage():
     if status != 200:
         return jsonify(payload_or_error), status
     return jsonify(payload_or_error), 200
+
+
+@api_bp.get("/model/metrics")
+def get_model_metrics():
+    weights_dir = Path(__file__).resolve().parents[1] / "models" / "weights"
+    metrics_path = weights_dir / "evaluation_metrics.json"
+    if not metrics_path.exists():
+        return (
+            jsonify(
+                {
+                    "detail": "Model evaluation metrics are not available yet. Run training to generate them.",
+                    "metrics_path": str(metrics_path),
+                }
+            ),
+            404,
+        )
+
+    try:
+        with metrics_path.open("r", encoding="utf-8") as f:
+            metrics = json.load(f)
+    except Exception:
+        logger.exception("Failed to read evaluation metrics file")
+        return jsonify({"detail": "Failed to load model evaluation metrics."}), 500
+
+    return jsonify(metrics), 200
 
 
 @api_bp.post("/predict/report")

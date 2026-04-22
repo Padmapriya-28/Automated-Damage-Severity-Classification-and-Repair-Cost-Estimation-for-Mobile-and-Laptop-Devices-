@@ -315,6 +315,224 @@ button:hover {
   gap: 12px;
 }
 
+.evaluation-metrics {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(62, 242, 255, 0.35);
+  background: rgba(10, 22, 42, 0.9);
+}
+
+.metric-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #d8e9ff;
+  font-size: 0.9rem;
+}
+
+.metric-meta span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(62, 242, 255, 0.3);
+  background: rgba(62, 242, 255, 0.08);
+}
+
+.metric-chart {
+  display: grid;
+  gap: 8px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 58px;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-label {
+  color: #d5e8ff;
+  font-size: 0.92rem;
+}
+
+.metric-track {
+  height: 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(152, 255, 77, 0.3);
+  background: rgba(5, 12, 24, 0.82);
+  overflow: hidden;
+}
+
+.metric-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3ef2ff 0%, #98ff4d 100%);
+}
+
+.metric-value {
+  color: #c8fcb0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.epoch-chart {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(62, 242, 255, 0.28);
+  background: rgba(7, 16, 30, 0.8);
+}
+
+.epoch-title {
+  margin-bottom: 8px;
+  color: #d9ecff;
+  font-weight: 600;
+}
+
+.epoch-bars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(38px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.epoch-row {
+  display: grid;
+  gap: 6px;
+}
+
+.epoch-label {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #b7cff3;
+}
+
+.epoch-bar-track {
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 164, 215, 0.24);
+  background: rgba(6, 12, 24, 0.85);
+}
+
+.epoch-bar {
+  width: 12px;
+  border-radius: 8px 8px 3px 3px;
+}
+
+.epoch-bar.train {
+  background: rgba(62, 242, 255, 0.85);
+}
+
+.epoch-bar.val {
+  background: rgba(152, 255, 77, 0.9);
+}
+
+.epoch-legend {
+  margin-top: 8px;
+  display: flex;
+  gap: 14px;
+  color: #cfe3ff;
+  font-size: 0.86rem;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.legend-dot.train {
+  background: rgba(62, 242, 255, 0.9);
+}
+
+.legend-dot.val {
+  background: rgba(152, 255, 77, 0.95);
+}
+
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.metrics-table th,
+.metrics-table td {
+  border: 1px solid rgba(135, 164, 215, 0.24);
+  padding: 7px 8px;
+  text-align: left;
+}
+
+.metrics-table th {
+  color: #d8ecff;
+  background: rgba(62, 242, 255, 0.08);
+}
+
+.metrics-table td {
+  color: #c4defe;
+}
+
+.metric-empty {
+  color: #ffb7c0;
+  background: rgba(115, 28, 40, 0.24);
+  border: 1px solid rgba(255, 91, 110, 0.45);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.confusion-matrix-card {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(62, 242, 255, 0.28);
+  background: rgba(7, 16, 30, 0.8);
+}
+
+.cm-title {
+  margin-bottom: 8px;
+  color: #d9ecff;
+  font-weight: 600;
+}
+
+.cm-table-wrap {
+  overflow-x: auto;
+}
+
+.confusion-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 360px;
+}
+
+.confusion-matrix-table th,
+.confusion-matrix-table td {
+  border: 1px solid rgba(135, 164, 215, 0.24);
+  padding: 7px;
+  text-align: center;
+}
+
+.confusion-matrix-table thead th {
+  color: #d8ecff;
+  background: rgba(62, 242, 255, 0.08);
+}
+
+.confusion-matrix-table tbody th {
+  color: #cde4ff;
+  background: rgba(12, 25, 46, 0.8);
+  text-align: left;
+}
+
+.cm-cell {
+  color: #e5f4ff;
+  font-weight: 700;
+  background: rgba(62, 242, 255, calc(var(--cm-intensity, 0.15) * 0.8));
+}
+
 #prediction {
   display: grid;
   gap: 10px;

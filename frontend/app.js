@@ -2,6 +2,7 @@ const statusText = document.getElementById("status");
 const preview = document.getElementById("preview");
 const prediction = document.getElementById("prediction");
 const heatmap = document.getElementById("heatmap");
+const evaluationMetrics = document.getElementById("evaluation-metrics");
 const downloadReportBtn = document.getElementById("download-report-btn");
 
 let latestSubmission = null;
@@ -20,6 +21,8 @@ const shopQuoteAmount = (sessionStorage.getItem("shopQuoteAmount") || "").trim()
 const shopQuoteCurrency = (sessionStorage.getItem("shopQuoteCurrency") || "").trim();
 const shopQuoteDetails = (sessionStorage.getItem("shopQuoteDetails") || "").trim();
 const regionCode = detectRegionCode();
+
+loadEvaluationMetrics();
 
 if (!dataUrl) {
   setStatus("No uploaded image found. Please upload an image first.");
@@ -207,6 +210,187 @@ async function runPrediction(
       downloadReportBtn.disabled = true;
     }
     setStatus(`Error: ${error.message}`);
+  }
+}
+
+function asPercent(value) {
+  return `${(Number(value || 0) * 100).toFixed(1)}%`;
+}
+
+function clampPercent(value) {
+  return Math.max(0, Math.min(100, Number(value || 0) * 100));
+}
+
+function renderEvaluationMetrics(payload) {
+  if (!evaluationMetrics) {
+    return;
+  }
+
+  const summary = payload.summary || {};
+  const dataset = payload.dataset || {};
+  const history = payload.training_history || {};
+  const perClass = Array.isArray(payload.per_class) ? payload.per_class : [];
+  const confusion = payload.confusion_matrix || {};
+  const confusionLabels = Array.isArray(confusion.labels) ? confusion.labels : [];
+  const confusionMatrix = Array.isArray(confusion.matrix) ? confusion.matrix : [];
+
+  const summaryBars = [
+    { label: "Accuracy", value: summary.accuracy || 0 },
+    { label: "Macro Precision", value: summary.macro_precision || 0 },
+    { label: "Macro Recall", value: summary.macro_recall || 0 },
+    { label: "Macro F1", value: summary.macro_f1 || 0 },
+  ]
+    .map(
+      (item) => `
+        <div class="metric-row">
+          <div class="metric-label">${item.label}</div>
+          <div class="metric-track">
+            <div class="metric-fill" style="width:${clampPercent(item.value)}%"></div>
+          </div>
+          <div class="metric-value">${asPercent(item.value)}</div>
+        </div>
+      `
+    )
+    .join("");
+
+  const epochs = Math.max((history.accuracy || []).length, (history.val_accuracy || []).length);
+  let epochBars = "";
+  for (let i = 0; i < epochs; i += 1) {
+    const trainAcc = Number((history.accuracy || [])[i] || 0);
+    const valAcc = Number((history.val_accuracy || [])[i] || 0);
+    epochBars += `
+      <div class="epoch-row">
+        <div class="epoch-label">E${i + 1}</div>
+        <div class="epoch-bar-track">
+          <div class="epoch-bar train" style="height:${Math.max(4, clampPercent(trainAcc))}%" title="Train: ${asPercent(trainAcc)}"></div>
+          <div class="epoch-bar val" style="height:${Math.max(4, clampPercent(valAcc))}%" title="Validation: ${asPercent(valAcc)}"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  const perClassRows = perClass
+    .map(
+      (item) => `
+        <tr>
+          <td>${item.label}</td>
+          <td>${asPercent(item.precision)}</td>
+          <td>${asPercent(item.recall)}</td>
+          <td>${asPercent(item.f1)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  const maxConfusionValue = confusionMatrix.length
+    ? Math.max(...confusionMatrix.flat().map((value) => Number(value || 0)), 1)
+    : 1;
+
+  const confusionHeaderCells = confusionLabels
+    .map((label) => `<th scope="col">${label}</th>`)
+    .join("");
+
+  const confusionRows = confusionMatrix
+    .map((row, rowIdx) => {
+      const label = confusionLabels[rowIdx] || `Class ${rowIdx + 1}`;
+      const cells = row
+        .map((value) => {
+          const numeric = Number(value || 0);
+          const intensity = Math.max(0.12, numeric / maxConfusionValue);
+          return `<td class="cm-cell" style="--cm-intensity:${intensity}" title="${numeric}">${numeric}</td>`;
+        })
+        .join("");
+      return `<tr><th scope="row">${label}</th>${cells}</tr>`;
+    })
+    .join("");
+
+  evaluationMetrics.innerHTML = `
+    <div class="metric-meta">
+      <span>Model: ${payload.model_name || "N/A"}</span>
+      <span>Train Samples: ${dataset.train_samples ?? "N/A"}</span>
+      <span>Validation Samples: ${dataset.validation_samples ?? "N/A"}</span>
+    </div>
+
+    <div class="metric-chart">
+      ${summaryBars}
+    </div>
+
+    <div class="epoch-chart">
+      <div class="epoch-title">Epoch Accuracy (Train vs Validation)</div>
+      <div class="epoch-bars">
+        ${epochBars || '<div class="metric-empty">Training history not available.</div>'}
+      </div>
+      <div class="epoch-legend">
+        <span><i class="legend-dot train"></i>Train</span>
+        <span><i class="legend-dot val"></i>Validation</span>
+      </div>
+    </div>
+
+    <table class="metrics-table">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th>Precision</th>
+          <th>Recall</th>
+          <th>F1</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${perClassRows || '<tr><td colspan="4">Per-class metrics not available.</td></tr>'}
+      </tbody>
+    </table>
+
+    <div class="confusion-matrix-card">
+      <div class="cm-title">Confusion Matrix (Actual x Predicted)</div>
+      ${
+        confusionLabels.length && confusionRows
+          ? `
+      <div class="cm-table-wrap">
+        <table class="confusion-matrix-table">
+          <thead>
+            <tr>
+              <th scope="col">Actual \ Predicted</th>
+              ${confusionHeaderCells}
+            </tr>
+          </thead>
+          <tbody>
+            ${confusionRows}
+          </tbody>
+        </table>
+      </div>`
+          : '<div class="metric-empty">Confusion matrix is not available in this metrics file.</div>'
+      }
+    </div>
+  `;
+}
+
+async function loadEvaluationMetrics() {
+  if (!evaluationMetrics) {
+    return;
+  }
+
+  evaluationMetrics.textContent = "Loading model metrics...";
+  try {
+    const response = await fetch(`/api/model/metrics?ts=${Date.now()}`, {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      let detail = "";
+      try {
+        const errorPayload = await response.json();
+        detail = errorPayload.detail || "";
+      } catch (jsonError) {
+        detail = "";
+      }
+
+      const baseMessage = detail || `Unable to load model metrics (HTTP ${response.status}).`;
+      throw new Error(baseMessage);
+    }
+
+    const payload = await response.json();
+    renderEvaluationMetrics(payload);
+  } catch (error) {
+    evaluationMetrics.innerHTML = `<div class="metric-empty">${error.message} If you just updated code, restart server and hard refresh this page.</div>`;
   }
 }
 

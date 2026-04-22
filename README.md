@@ -10,6 +10,7 @@ This project is a Flask-based web application for analyzing damage photos of pho
 4. Estimates repair cost (fixed INR output).
 5. Compares optional shop quote and returns Yes/No decision with reason.
 6. Provides a downloadable PDF report with all prediction details.
+7. Shows model evaluation metrics as graph charts on the result page.
 
 ## Main Features
 
@@ -28,6 +29,11 @@ This project is a Flask-based web application for analyzing damage photos of pho
    - AI recommendation (worth / not worth) + reason
    - Shop quote assessment (yes/no) + reason
 - PDF export from prediction page
+- Evaluation metrics visualization:
+   - Summary chart (Accuracy, Precision, Recall, F1)
+   - Epoch chart (Train vs Validation accuracy)
+   - Per-class metrics table
+   - Confusion matrix heatmap (Actual x Predicted)
 
 ## Tech Stack
 
@@ -94,6 +100,9 @@ Open:
    - Same input as /api/predict
    - Output: downloadable PDF report containing website name and all prediction details
 
+- GET /api/model/metrics
+   - Output: saved model evaluation metrics JSON (summary, per-class, and training history)
+
 ## Training The Classifier
 
 Run:
@@ -101,6 +110,10 @@ Run:
 ```bash
 python models/train_classifier.py
 ```
+
+Training also writes:
+
+- models/weights/evaluation_metrics.json
 
 Expected training data folders:
 
