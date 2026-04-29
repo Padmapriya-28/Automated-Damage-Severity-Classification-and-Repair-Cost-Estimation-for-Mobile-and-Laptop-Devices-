@@ -214,7 +214,9 @@ async function runPrediction(
 }
 
 function asPercent(value) {
-  return `${(Number(value || 0) * 100).toFixed(1)}%`;
+  const num = Number(value || 0);
+  const percentage = num >= 1 ? num : num * 100;
+  return `${percentage.toFixed(1)}%`;
 }
 
 function clampPercent(value) {

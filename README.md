@@ -130,6 +130,6 @@ Output weights file:
 ## Important Notes
 
 - The app enforces device-image validation before prediction; unrelated photos are rejected.
-- Cost output is converted to the regional currency resolved from the request.
+- Cost estimates are calculated in USD and converted to regional currency using live exchange rates with fallback to static rates.
 - Shop quote decision is an assistive recommendation, not a legal/financial guarantee.
 - For best production accuracy, train with a larger and balanced dataset across real damage classes.

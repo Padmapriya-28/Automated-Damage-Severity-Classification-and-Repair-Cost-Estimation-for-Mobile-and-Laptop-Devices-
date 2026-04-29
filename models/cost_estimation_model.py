@@ -18,15 +18,15 @@ SEVERITY_SCORES = {
 
 MARKET_COST_RANGES_USD = {
     "phone": {
-        # Typical screen/backglass repair pricing is usually well below full replacement value.
-        "Minor": (25.0, 85.0),
-        "Moderate": (85.0, 190.0),
-        "Severe": (190.0, 340.0),
+        # Ultra-low repair pricing: parts-only, screen protector, basic fixes
+        "Minor": (5.0, 8.0),
+        "Moderate": (8.0, 12.0),
+        "Severe": (12.0, 15.0),
     },
     "laptop": {
-        "Minor": (60.0, 180.0),
-        "Moderate": (180.0, 420.0),
-        "Severe": (420.0, 820.0),
+        "Minor": (5.0, 8.0),
+        "Moderate": (8.0, 12.0),
+        "Severe": (12.0, 15.0),
     },
 }
 

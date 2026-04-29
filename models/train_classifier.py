@@ -73,10 +73,10 @@ def evaluate_classifier(model: tf.keras.Model, val_ds: tf.data.Dataset) -> Dict:
         per_class.append(
             {
                 "label": label,
-                "precision": round(precision, 4),
-                "recall": round(recall, 4),
-                "f1": round(f1, 4),
-                "accuracy": round(class_accuracy, 4),
+                "precision": round(precision * 100, 2),
+                "recall": round(recall * 100, 2),
+                "f1": round(f1 * 100, 2),
+                "accuracy": round(class_accuracy * 100, 2),
                 "support": support,
             }
         )
@@ -84,10 +84,10 @@ def evaluate_classifier(model: tf.keras.Model, val_ds: tf.data.Dataset) -> Dict:
     overall_accuracy = _safe_div(float(np.sum(np.diag(confusion))), float(np.sum(confusion)))
     return {
         "summary": {
-            "accuracy": round(overall_accuracy, 4),
-            "macro_precision": round(float(np.mean(precision_values)), 4),
-            "macro_recall": round(float(np.mean(recall_values)), 4),
-            "macro_f1": round(float(np.mean(f1_values)), 4),
+            "accuracy": round(overall_accuracy * 100, 2),
+            "macro_precision": round(float(np.mean(precision_values)) * 100, 2),
+            "macro_recall": round(float(np.mean(recall_values)) * 100, 2),
+            "macro_f1": round(float(np.mean(f1_values)) * 100, 2),
         },
         "per_class": per_class,
         "confusion_matrix": {
@@ -320,9 +320,9 @@ def train() -> None:
         "confusion_matrix": metrics["confusion_matrix"],
         "training_history": {
             "loss": [round(float(v), 4) for v in merged_history.get("loss", [])],
-            "accuracy": [round(float(v), 4) for v in merged_history.get("accuracy", [])],
+            "accuracy": [round(float(v) * 100, 2) for v in merged_history.get("accuracy", [])],
             "val_loss": [round(float(v), 4) for v in merged_history.get("val_loss", [])],
-            "val_accuracy": [round(float(v), 4) for v in merged_history.get("val_accuracy", [])],
+            "val_accuracy": [round(float(v) * 100, 2) for v in merged_history.get("val_accuracy", [])],
         },
     }
 
