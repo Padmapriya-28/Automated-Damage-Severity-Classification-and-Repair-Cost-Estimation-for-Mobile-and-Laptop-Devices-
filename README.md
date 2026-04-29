@@ -118,7 +118,10 @@ Training also writes:
 Expected training data folders:
 
 - data/Image_brokenphones
+- data/Image_moderate
 - data/Image_phones
+
+Training now expects all three folders to contain real images so `Moderate` is learned as a true class instead of being inferred from a two-class gap. The trainer also applies inverse-frequency class weights to reduce imbalance across the classes.
 
 Output weights file:
 
@@ -127,6 +130,6 @@ Output weights file:
 ## Important Notes
 
 - The app enforces device-image validation before prediction; unrelated photos are rejected.
-- Cost output is currently forced to INR.
+- Cost output is converted to the regional currency resolved from the request.
 - Shop quote decision is an assistive recommendation, not a legal/financial guarantee.
 - For best production accuracy, train with a larger and balanced dataset across real damage classes.

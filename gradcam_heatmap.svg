@@ -1,0 +1,124 @@
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1600" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="phoneGrad" x1="430" y1="150" x2="1160" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1F2937"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="screenPink" x1="500" y1="210" x2="1100" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F9A8D4"/>
+      <stop offset="0.55" stop-color="#F472B6"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <radialGradient id="heatCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(827 513) rotate(90) scale(210 260)">
+      <stop offset="0" stop-color="#FF3B30" stop-opacity="0.95"/>
+      <stop offset="0.33" stop-color="#FFB000" stop-opacity="0.88"/>
+      <stop offset="0.62" stop-color="#A8FF00" stop-opacity="0.56"/>
+      <stop offset="1" stop-color="#1E90FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="heatLower" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(745 585) rotate(90) scale(150 180)">
+      <stop offset="0" stop-color="#FFEA00" stop-opacity="0.82"/>
+      <stop offset="0.42" stop-color="#FF6A00" stop-opacity="0.54"/>
+      <stop offset="1" stop-color="#1E90FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur" x="0" y="0" width="1600" height="1000" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="shadow" x="350" y="110" width="900" height="820" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="glassGlow" x="450" y="200" width="700" height="620" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="titleGlow" x="0" y="0" width="1600" height="140" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#60A5FA" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bgGrad)"/>
+  <circle cx="250" cy="170" r="150" fill="#4F46E5" fill-opacity="0.08" filter="url(#softBlur)"/>
+  <circle cx="1340" cy="780" r="220" fill="#EC4899" fill-opacity="0.09" filter="url(#softBlur)"/>
+  <circle cx="1080" cy="120" r="160" fill="#22D3EE" fill-opacity="0.06" filter="url(#softBlur)"/>
+
+  <text x="800" y="90" text-anchor="middle" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="700" letter-spacing="0.8" filter="url(#titleGlow)">Grad-CAM Heatmap</text>
+  <text x="800" y="126" text-anchor="middle" fill="#94A3B8" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="500">Deep learning explainability visualization after prediction</text>
+
+  <g filter="url(#shadow)">
+    <rect x="455" y="140" width="690" height="790" rx="58" fill="url(#phoneGrad)"/>
+    <rect x="480" y="175" width="640" height="720" rx="44" fill="#020617" fill-opacity="0.95"/>
+    <rect x="498" y="195" width="604" height="680" rx="36" fill="url(#screenPink)"/>
+
+    <!-- phone bezels and details -->
+    <rect x="715" y="152" width="170" height="10" rx="5" fill="#334155"/>
+    <circle cx="800" cy="162" r="6" fill="#0F172A"/>
+    <circle cx="800" cy="162" r="2.2" fill="#64748B"/>
+
+    <!-- image-like phone composition -->
+    <g>
+      <rect x="522" y="236" width="548" height="598" rx="28" fill="#F9A8D4" fill-opacity="0.26"/>
+      <ellipse cx="780" cy="610" rx="160" ry="86" fill="#F43F5E" fill-opacity="0.18"/>
+      <ellipse cx="893" cy="430" rx="180" ry="110" fill="#FB7185" fill-opacity="0.18"/>
+      <ellipse cx="655" cy="470" rx="125" ry="96" fill="#FDBA74" fill-opacity="0.08"/>
+    </g>
+
+    <!-- broken glass fragments -->
+    <g opacity="0.92">
+      <path d="M734 296 L790 386 L699 427 L655 343 Z" fill="#F8FAFC" fill-opacity="0.08" stroke="#F8FAFC" stroke-opacity="0.16"/>
+      <path d="M804 286 L885 369 L820 451 L764 372 Z" fill="#F8FAFC" fill-opacity="0.07" stroke="#F8FAFC" stroke-opacity="0.16"/>
+      <path d="M892 318 L955 410 L900 504 L845 410 Z" fill="#F8FAFC" fill-opacity="0.08" stroke="#F8FAFC" stroke-opacity="0.16"/>
+      <path d="M646 430 L721 513 L661 594 L596 507 Z" fill="#F8FAFC" fill-opacity="0.06" stroke="#F8FAFC" stroke-opacity="0.13"/>
+      <path d="M754 445 L843 528 L770 618 L694 529 Z" fill="#F8FAFC" fill-opacity="0.08" stroke="#F8FAFC" stroke-opacity="0.15"/>
+      <path d="M862 458 L948 539 L883 637 L801 545 Z" fill="#F8FAFC" fill-opacity="0.07" stroke="#F8FAFC" stroke-opacity="0.14"/>
+      <path d="M636 625 L718 691 L654 786 L574 716 Z" fill="#F8FAFC" fill-opacity="0.06" stroke="#F8FAFC" stroke-opacity="0.13"/>
+      <path d="M781 648 L882 714 L806 806 L717 733 Z" fill="#F8FAFC" fill-opacity="0.07" stroke="#F8FAFC" stroke-opacity="0.14"/>
+      <path d="M919 615 L1010 682 L942 785 L853 710 Z" fill="#F8FAFC" fill-opacity="0.06" stroke="#F8FAFC" stroke-opacity="0.13"/>
+    </g>
+
+    <!-- crack lines -->
+    <g stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2.5" stroke-linecap="round">
+      <path d="M799 505 L742 408 L664 336"/>
+      <path d="M799 505 L886 389 L959 320"/>
+      <path d="M799 505 L716 548 L631 625"/>
+      <path d="M799 505 L835 566 L873 662"/>
+      <path d="M799 505 L914 543 L1006 590"/>
+      <path d="M799 505 L780 628 L752 770"/>
+      <path d="M799 505 L674 474 L563 452"/>
+    </g>
+
+    <!-- Grad-CAM overlay: hot zones concentrated on cracks and impact areas -->
+    <g filter="url(#glassGlow)">
+      <ellipse cx="806" cy="506" rx="220" ry="220" fill="url(#heatCore)"/>
+      <ellipse cx="744" cy="542" rx="150" ry="150" fill="url(#heatLower)"/>
+      <ellipse cx="883" cy="405" rx="120" ry="110" fill="#FFD400" fill-opacity="0.58"/>
+      <ellipse cx="711" cy="406" rx="102" ry="88" fill="#FF6F00" fill-opacity="0.44"/>
+      <ellipse cx="655" cy="631" rx="100" ry="82" fill="#00A3FF" fill-opacity="0.18"/>
+      <ellipse cx="957" cy="660" rx="105" ry="92" fill="#00A3FF" fill-opacity="0.12"/>
+      <ellipse cx="814" cy="708" rx="120" ry="88" fill="#3B82F6" fill-opacity="0.14"/>
+    </g>
+
+    <!-- sharper localized hot spots on fracture lines -->
+    <g filter="url(#softBlur)">
+      <circle cx="790" cy="498" r="58" fill="#FF2D2D" fill-opacity="0.88"/>
+      <circle cx="861" cy="430" r="54" fill="#FFB800" fill-opacity="0.86"/>
+      <circle cx="732" cy="445" r="42" fill="#FDE047" fill-opacity="0.72"/>
+      <circle cx="770" cy="592" r="36" fill="#9AE600" fill-opacity="0.52"/>
+    </g>
+
+    <!-- diagnostic legend -->
+    <g transform="translate(520 830)">
+      <rect x="0" y="0" width="560" height="72" rx="18" fill="#0F172A" fill-opacity="0.70" stroke="#334155" stroke-opacity="0.55"/>
+      <circle cx="40" cy="36" r="10" fill="#FF2D2D"/>
+      <text x="58" y="41" fill="#E2E8F0" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">High attention</text>
+      <circle cx="208" cy="36" r="10" fill="#9AE600"/>
+      <text x="226" y="41" fill="#E2E8F0" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">Medium attention</text>
+      <circle cx="394" cy="36" r="10" fill="#3B82F6"/>
+      <text x="412" y="41" fill="#E2E8F0" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">Low attention</text>
+    </g>
+  </g>
+
+  <!-- subtle caption -->
+  <text x="800" y="962" text-anchor="middle" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14">Model focuses on fracture lines, impact points, and shattered glass clusters on the screen</text>
+</svg>

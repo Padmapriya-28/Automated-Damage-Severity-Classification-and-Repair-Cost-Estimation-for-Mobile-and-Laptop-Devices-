@@ -18,14 +18,15 @@ SEVERITY_SCORES = {
 
 MARKET_COST_RANGES_USD = {
     "phone": {
-        "Minor": (40.0, 140.0),
-        "Moderate": (140.0, 300.0),
-        "Severe": (300.0, 480.0),
+        # Typical screen/backglass repair pricing is usually well below full replacement value.
+        "Minor": (25.0, 85.0),
+        "Moderate": (85.0, 190.0),
+        "Severe": (190.0, 340.0),
     },
     "laptop": {
-        "Minor": (90.0, 260.0),
-        "Moderate": (260.0, 620.0),
-        "Severe": (620.0, 1100.0),
+        "Minor": (60.0, 180.0),
+        "Moderate": (180.0, 420.0),
+        "Severe": (420.0, 820.0),
     },
 }
 
@@ -70,9 +71,11 @@ class CostEstimator:
 
         # Move within selected severity range based on confidence while keeping estimate bounded.
         confidence = float(np.clip(severity_confidence, 0.0, 1.0))
-        within_band = selected_low + (0.35 + 0.65 * confidence) * (selected_high - selected_low)
+        # A cracked screen usually prices closer to the low-to-mid part of the band unless confidence is very high.
+        within_band = selected_low + (0.15 + 0.5 * confidence) * (selected_high - selected_low)
 
-        blended = 0.6 * weighted_expected + 0.4 * within_band
+        # Keep the estimate anchored to the class probabilities while avoiding replacement-like pricing.
+        blended = 0.72 * weighted_expected + 0.28 * within_band
         estimate = float(np.clip(blended, selected_low, selected_high))
 
         note = f"Market-range estimate for {device_type} using severity probabilities"
@@ -83,6 +86,7 @@ class CostEstimator:
             normalized = float(np.clip(model_raw / 2.0, 0.0, 1.0))
             model_estimate = selected_low + normalized * (selected_high - selected_low)
             delta = model_estimate - estimate
+            # Bound the learned adjustment so it can refine but not dominate the heuristic estimate.
             estimate = estimate + float(np.clip(delta, -MAX_MODEL_ADJUSTMENT_RATIO * estimate, MAX_MODEL_ADJUSTMENT_RATIO * estimate))
             note = f"Market-range estimate for {device_type} with bounded regressor adjustment"
 

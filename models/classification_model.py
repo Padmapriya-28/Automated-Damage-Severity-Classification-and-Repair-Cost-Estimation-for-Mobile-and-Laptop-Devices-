@@ -37,7 +37,7 @@ class DamageClassifier:
         severe_prob = prob_map["Severe"]
         minor_prob = prob_map["Minor"]
 
-        # With current dataset, Moderate is treated as an ambiguity band between Minor and Severe.
+        # Keep a middle-band fallback for ambiguous cases even when the moderate class is learned.
         if severe_prob >= SEVERE_MIN_CONFIDENCE or (severe_prob - minor_prob) >= SEVERE_MINOR_MARGIN:
             label = "Severe"
             confidence = severe_prob

@@ -131,7 +131,7 @@ def build_prediction_payload(req):
         confidence,
         probs,
     )
-    resolved_currency = "INR"
+    resolved_currency = resolve_currency(region_code, currency_code)
     cost_amount_local = convert_from_usd(cost_amount_usd, resolved_currency)
 
     shop_quote = None
