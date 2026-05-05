@@ -25,11 +25,6 @@ HEAD_LR = 1e-3
 FINE_TUNE_LR = 1e-5
 FINE_TUNE_AT = 180
 MODEL_NAME = "efficientnetb0"
-DATASET_FOLDERS = {
-    0: ("Image_phones", "Minor"),
-    1: ("Image_moderate", "Moderate"),
-    2: ("Image_brokenphones", "Severe"),
-}
 
 
 def _safe_div(numerator: float, denominator: float) -> float:
@@ -73,10 +68,10 @@ def evaluate_classifier(model: tf.keras.Model, val_ds: tf.data.Dataset) -> Dict:
         per_class.append(
             {
                 "label": label,
-                "precision": round(precision * 100, 2),
-                "recall": round(recall * 100, 2),
-                "f1": round(f1 * 100, 2),
-                "accuracy": round(class_accuracy * 100, 2),
+                "precision": round(precision, 4),
+                "recall": round(recall, 4),
+                "f1": round(f1, 4),
+                "accuracy": round(class_accuracy, 4),
                 "support": support,
             }
         )
@@ -84,10 +79,10 @@ def evaluate_classifier(model: tf.keras.Model, val_ds: tf.data.Dataset) -> Dict:
     overall_accuracy = _safe_div(float(np.sum(np.diag(confusion))), float(np.sum(confusion)))
     return {
         "summary": {
-            "accuracy": round(overall_accuracy * 100, 2),
-            "macro_precision": round(float(np.mean(precision_values)) * 100, 2),
-            "macro_recall": round(float(np.mean(recall_values)) * 100, 2),
-            "macro_f1": round(float(np.mean(f1_values)) * 100, 2),
+            "accuracy": round(overall_accuracy, 4),
+            "macro_precision": round(float(np.mean(precision_values)), 4),
+            "macro_recall": round(float(np.mean(recall_values)), 4),
+            "macro_f1": round(float(np.mean(f1_values)), 4),
         },
         "per_class": per_class,
         "confusion_matrix": {
@@ -98,37 +93,27 @@ def evaluate_classifier(model: tf.keras.Model, val_ds: tf.data.Dataset) -> Dict:
 
 
 def collect_dataset(root: Path) -> Tuple[List[str], List[int]]:
+    broken_dir = root / "Image_brokenphones"
+    normal_dir = root / "Image_phones"
+
+    if not broken_dir.exists() or not normal_dir.exists():
+        raise FileNotFoundError("Expected data/Image_brokenphones and data/Image_phones directories")
+
     paths: List[str] = []
     labels: List[int] = []
 
-    missing_folders = []
-    class_counts: Dict[str, int] = {}
+    for p in sorted(broken_dir.glob("*")):
+        if p.suffix.lower() in {".jpg", ".jpeg", ".png"}:
+            paths.append(str(p))
+            labels.append(2)  # Severe
 
-    for label_idx, (folder_name, class_name) in DATASET_FOLDERS.items():
-        class_dir = root / folder_name
-        if not class_dir.exists():
-            missing_folders.append(folder_name)
-            class_counts[class_name] = 0
-            continue
+    for p in sorted(normal_dir.glob("*")):
+        if p.suffix.lower() in {".jpg", ".jpeg", ".png"}:
+            paths.append(str(p))
+            labels.append(0)  # Minor
 
-        class_paths = [
-            str(path)
-            for path in sorted(class_dir.glob("*"))
-            if path.suffix.lower() in {".jpg", ".jpeg", ".png"}
-        ]
-        paths.extend(class_paths)
-        labels.extend([label_idx] * len(class_paths))
-        class_counts[class_name] = len(class_paths)
-
-    if missing_folders:
-        raise FileNotFoundError(
-            "Expected balanced class folders under data/: "
-            + ", ".join(missing_folders)
-            + ". Add a real Image_moderate folder so Moderate can be learned properly."
-        )
-
-    if any(count == 0 for count in class_counts.values()):
-        raise ValueError(f"Each class folder must contain images. Found counts: {class_counts}")
+    if not paths:
+        raise ValueError("No images found for training")
 
     return paths, labels
 
@@ -213,21 +198,6 @@ def class_distribution(labels: List[int]) -> Dict[str, int]:
     return {k: v for k, v in counts.items() if v > 0}
 
 
-def compute_class_weights(labels: List[int]) -> Dict[int, float]:
-    counts = np.bincount(labels, minlength=len(LABELS)).astype(np.float32)
-    total = float(np.sum(counts))
-    class_weights: Dict[int, float] = {}
-
-    for idx, count in enumerate(counts):
-        if count <= 0:
-            raise ValueError(
-                f"Cannot compute class weights because label '{LABELS[idx]}' has no training samples."
-            )
-        class_weights[idx] = round(total / (len(LABELS) * float(count)), 4)
-
-    return class_weights
-
-
 def _get_backbone(model: tf.keras.Model) -> tf.keras.Model:
     for layer in model.layers:
         if isinstance(layer, tf.keras.Model) and "efficientnet" in layer.name.lower():
@@ -251,7 +221,6 @@ def train() -> None:
     root = Path(__file__).resolve().parents[1] / "data"
     paths, labels = collect_dataset(root)
     train_paths, train_labels, val_paths, val_labels = stratified_split(paths, labels, VAL_SPLIT)
-    class_weights = compute_class_weights(train_labels)
 
     train_ds = build_tf_dataset(train_paths, train_labels, training=True)
     val_ds = build_tf_dataset(val_paths, val_labels, training=False)
@@ -273,7 +242,6 @@ def train() -> None:
         validation_data=val_ds,
         epochs=HEAD_EPOCHS,
         callbacks=head_callbacks,
-        class_weight=class_weights,
         verbose=1,
     )
 
@@ -300,7 +268,6 @@ def train() -> None:
             validation_data=val_ds,
             epochs=FINE_TUNE_EPOCHS,
             callbacks=fine_tune_callbacks,
-            class_weight=class_weights,
             verbose=1,
         )
         merged_history = _merge_history(head_history, fine_tune_history)
@@ -320,9 +287,9 @@ def train() -> None:
         "confusion_matrix": metrics["confusion_matrix"],
         "training_history": {
             "loss": [round(float(v), 4) for v in merged_history.get("loss", [])],
-            "accuracy": [round(float(v) * 100, 2) for v in merged_history.get("accuracy", [])],
+            "accuracy": [round(float(v), 4) for v in merged_history.get("accuracy", [])],
             "val_loss": [round(float(v), 4) for v in merged_history.get("val_loss", [])],
-            "val_accuracy": [round(float(v) * 100, 2) for v in merged_history.get("val_accuracy", [])],
+            "val_accuracy": [round(float(v), 4) for v in merged_history.get("val_accuracy", [])],
         },
     }
 

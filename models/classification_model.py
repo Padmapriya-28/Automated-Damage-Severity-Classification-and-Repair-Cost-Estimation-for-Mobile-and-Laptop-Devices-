@@ -35,35 +35,18 @@ class DamageClassifier:
         prob_map = {LABELS[i]: float(prob) for i, prob in enumerate(probs)}
 
         severe_prob = prob_map["Severe"]
-        moderate_prob = prob_map["Moderate"]
         minor_prob = prob_map["Minor"]
 
-        # Rule: Detect damage vs no damage. If damage is detected, classify as Moderate or Severe.
-        # Otherwise default to Minor.
-        damage_signal = severe_prob + moderate_prob
-        
-        # If strong damage signal detected, classify as either Severe or Moderate
-        if damage_signal >= 0.55:
-            # Within damage classes, pick the more likely one
-            if severe_prob >= moderate_prob:
-                label = "Severe"
-                confidence = severe_prob
-            else:
-                label = "Moderate"
-                confidence = moderate_prob
-        # If only minor damage is detected
+        # With current dataset, Moderate is treated as an ambiguity band between Minor and Severe.
+        if severe_prob >= SEVERE_MIN_CONFIDENCE or (severe_prob - minor_prob) >= SEVERE_MINOR_MARGIN:
+            label = "Severe"
+            confidence = severe_prob
         elif minor_prob >= MINOR_MIN_CONFIDENCE:
             label = "Minor"
             confidence = minor_prob
-        # Fallback for edge cases: use the single highest probability
         else:
-            max_label_idx = int(np.argmax([minor_prob, moderate_prob, severe_prob]))
-            label = LABELS[max_label_idx]
-            confidence = [minor_prob, moderate_prob, severe_prob][max_label_idx]
-            # But enforce: if max is not Minor, treat as Moderate minimum
-            if label != "Minor" and confidence < 0.4:
-                label = "Moderate"
-                confidence = moderate_prob
+            label = "Moderate"
+            confidence = max(prob_map["Moderate"], 1.0 - abs(severe_prob - minor_prob))
 
         return label, confidence, prob_map
 
